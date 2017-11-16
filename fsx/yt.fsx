@@ -11,7 +11,7 @@ let media = Path.Combine(userDir, "Downloads", "media")
 
 let ``youtube-dl`` = Path.Combine(dir, "../youtube-dl", "youtube-dl.exe")
 
-type Choices =
+type YoutubeChoice =
     | LQ_MP3
     | HQ_MP3
     | LQ_Video
@@ -26,21 +26,26 @@ let youtube choice links =
     | LQ_Video -> sprintf "-f 18 %s %s" title links
     | HQ_Video -> sprintf """--max-quality "mp4" %s %s""" title links
 
+let choiceEnumerated =
+    Map(
+        [| ("1", LQ_MP3)
+           ("2", HQ_MP3)
+           ("3", LQ_Video)
+           ("4", HQ_Video) |] )
+
+let printChoices =
+    choiceEnumerated
+    |> Map.fold (fun acc key v -> acc + sprintf "%s. %A\n" key v ) ""
+
 let getChoice (num : string) =
-    match num.Trim() with
-    | "1" -> LQ_MP3
-    | "2" -> HQ_MP3
-    | "3" -> LQ_Video
-    | "4" -> HQ_Video
+    match choiceEnumerated.TryFind (num.Trim()) with
+    | Some choice -> choice
     | _ -> failwith "Can only choose 1, 2, 3, or 4."
 
 do
     printfn "
 Choose file type:
-1. LQ MP3
-2. HQ MP3
-3. LQ Video
-4. HQ Video"
+%s"  printChoices
     let choice = Console.ReadLine () |> getChoice
     printfn "Enter links you would like to download:"
     let links = Console.ReadLine () |> fun x -> x.Trim()
