@@ -25,7 +25,7 @@ do
         let filename = Path.Combine(media, Path.GetFileName(x))
         match File.Exists(filename) with
         | true ->
-            printfn "%s" filename
+            printfn "%s" (Path.GetFileName(filename))
             File.Delete(filename)
         | false -> ()
     )
