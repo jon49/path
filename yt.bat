@@ -1,2 +1,2 @@
-fsi "fsx/yt.fsx"
-clean-media.bat
+fsi "%~dp0\fsx\yt.fsx"
+%~dp0\clean-media.bat

@@ -1,1 +1,1 @@
-fsi "fsx/clean-media.fsx"
+fsi "%~dp0\fsx\clean-media.fsx"
