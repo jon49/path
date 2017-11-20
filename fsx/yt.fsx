@@ -14,8 +14,7 @@ let ``youtube-dl`` = Path.Combine(dir, "../youtube-dl", "youtube-dl.exe")
 type YoutubeChoice =
     | LQ_MP3
     | HQ_MP3
-    | LQ_Video
-    | HQ_Video
+    | HQ_Facebook
 
 let youtube choice links =
     let title = """-o "%(title)s-%(id)s.%(ext)s" """
@@ -23,15 +22,13 @@ let youtube choice links =
     match choice with
     | LQ_MP3 -> audio 9 links
     | HQ_MP3 -> audio 1 links
-    | LQ_Video -> sprintf "-f 18 %s %s" title links
-    | HQ_Video -> sprintf """--max-quality "mp4" %s %s""" title links
+    | HQ_Facebook -> sprintf """ -f dash_sd_src_no_ratelimit %s %s""" title links
 
 let choiceEnumerated =
     Map(
         [| ("1", LQ_MP3)
            ("2", HQ_MP3)
-           ("3", LQ_Video)
-           ("4", HQ_Video) |] )
+           ("3", HQ_Facebook) |] )
 
 let printChoices =
     choiceEnumerated
