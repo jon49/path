@@ -10,13 +10,17 @@ let cleaned = Path.Combine(media, "cleaned")
 
 do
     // Move files in ~/Downloads/*.mp* to ~/Downloads/media/*
-    printfn "Moving media files from ~/Downloads"
-    Directory.GetFiles(downloads, "*.mp*")
-    |> Array.iter (fun x ->
-        let filename = Path.GetFileName(x)
-        printfn "%s" filename
-        File.Move(x, Path.Combine(media, filename))
-    )
+    let mediaInDownloads = Directory.GetFiles(downloads, "*.mp*")
+    match mediaInDownloads.Length with
+    | 0 -> ()
+    | _ ->
+        printfn "Moving media files from ~/Downloads"
+        mediaInDownloads
+        |> Array.iter (fun x ->
+            let filename = Path.GetFileName(x)
+            printfn "- %s" filename
+            File.Move(x, Path.Combine(media, filename))
+        )
 
     // Delete files in ~/Downloads/media if already in ~/Downloads/media/cleaned
     printfn "Removing files in ~Downloads/media which have been cleaned"
@@ -25,7 +29,7 @@ do
         let filename = Path.Combine(media, Path.GetFileName(x))
         match File.Exists(filename) with
         | true ->
-            printfn "%s" (Path.GetFileName(filename))
+            printfn "- %s" (Path.GetFileName(filename))
             File.Delete(filename)
         | false -> ()
     )
