@@ -1,9 +1,12 @@
+// https://rg3.github.io/youtube-dl/download.html (Windows Executable)
+// http://ffmpeg.zeranoe.com/builds/ <- for mp3 conversion. Less files than libav (below)
 // http://builds.libav.org/windows/release-gpl/
 #load "./utils/Shell.fs"
 open System
 open System.IO
 open System.Diagnostics
 open Shell
+open Shell.Shell
 
 let dir = __SOURCE_DIRECTORY__
 let userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)
@@ -46,4 +49,9 @@ Choose file type:
     let choice = Console.ReadLine () |> getChoice
     printfn "Enter links you would like to download:"
     let links = Console.ReadLine () |> fun x -> x.Trim()
-    Shell.execute media ``youtube-dl`` (youtube choice links) |> ignore
+    Shell.execute
+        { (Shell.create ``youtube-dl``) with
+            WorkingDirectory = Some media
+            Arguments = (youtube choice links)
+            UseShellExecute = true
+            WaitForExit = true }
