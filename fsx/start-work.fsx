@@ -7,7 +7,7 @@ do
     [
         "microsoft-edge:"
         "outlook"
-        @"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
+        //@"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
         @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe"
     ]
     |> List.iter Shell.run
