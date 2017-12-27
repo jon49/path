@@ -1,12 +1,11 @@
 // https://rg3.github.io/youtube-dl/download.html (Windows Executable)
 // http://ffmpeg.zeranoe.com/builds/ <- for mp3 conversion. Less files than libav (below)
 // http://builds.libav.org/windows/release-gpl/
-#load "./utils/Shell.fs"
+#load "./utils/Utils.fs"
 open System
 open System.IO
 open System.Diagnostics
-open Shell
-open Shell.Shell
+open Utils
 
 let dir = __SOURCE_DIRECTORY__
 let userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)

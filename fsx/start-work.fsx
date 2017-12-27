@@ -1,6 +1,5 @@
-#load "./utils/Shell.fs"
-open Shell
-open Shell.Shell
+#load "./utils/Utils.fs"
+open Utils
 
 do
 

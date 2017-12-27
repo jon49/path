@@ -1,13 +1,32 @@
+#load "./utils/Shell.fs"
 
 open System
 open System.Text.RegularExpressions
+open Utils
+open System.IO
 
-let rec readlines () = seq {
-    let line = Console.ReadLine()
-    if line <> null then
-        yield line
-        yield! readlines ()
-}
+let debug = false
+
+let log a =
+    if debug then (printfn "%A" a)
+    a
+
+let tickers =
+    [
+     "Cash"
+     "BTC"
+     "BCH"
+     "VSS"
+     "VO"
+     "GOLD"
+     "SILVER"
+    ]
+
+let rawBalance =
+    { (Shell.create "hledger.exe") with
+        Arguments = sprintf "b %s -V -N --flat" (tickers |> String.concat " ") }
+    |> Shell.read
+    |> Seq.map log
 
 type Bucket =
     | MidCapBlend
@@ -18,26 +37,27 @@ type Bucket =
     | Cash
     | DigitalCurrency
     | Unknown
-    member this.TargetPercentage () =
+    static member ToList () =
+        [ MidCapBlend
+          MicroCap
+          InternationalSmall
+          PreciousMetal
+          LongTermBond
+          Cash
+          DigitalCurrency
+          Unknown ]
+    member this.TargetRatio () =
         match this with
         | MidCapBlend -> 0.15m
         | MicroCap -> 0.15m
         | InternationalSmall -> 0.15m
         | PreciousMetal -> 0.15m
-        | LongTermBond -> 0.2m
-        | Cash         -> 0.15m
+        | LongTermBond -> 0.20m
+        | Cash -> 0.15m
         | DigitalCurrency -> 0.05m
-        | Unknown -> 0.0m
-
-let bucketList =
-    [ MidCapBlend
-      MicroCap
-      InternationalSmall
-      PreciousMetal
-      LongTermBond
-      Cash
-      DigitalCurrency
-      Unknown ]
+        | Unknown -> 0m
+    member this.TargetPercentage () =
+        this.TargetRatio () |> (*) 100m
 
 let buckets =
     Map.empty<string, Bucket>
@@ -51,12 +71,10 @@ let buckets =
     |> Map.add "BTC" DigitalCurrency // 2.5%
     |> Map.add "BCH" DigitalCurrency
 
-//let CreateBucketList map (commodityName, balance) =
-//    let bucket =
-//        match buckets.TryFind commodityName with
-//        | Some x -> x
-//        | None -> Unknown
-//    let 
+let calculateDifference total (bucket : Bucket) currentValue =
+    let percentTarget = bucket.TargetRatio()
+    let currentPercent = currentValue / total
+    (percentTarget - currentPercent) * total
 
 let bucketName (name, _) =
     match buckets.TryFind name with
@@ -64,7 +82,7 @@ let bucketName (name, _) =
     | None -> Unknown
 
 let balance =
-    readlines ()
+    rawBalance
     |> Seq.map (fun x ->
         let xs = Regex.Split(x, "\s+")
         let balance = decimal <| xs.[1].Replace("$", "").Replace(",", "")
@@ -79,8 +97,26 @@ let total =
     |> Map.toArray
     |> Array.sumBy snd
 
-balance
-|> Map.iter (fun name amount -> printfn "%-18s: %10M - %5.2f%% - to reach target %10M" (name.ToString()) amount (amount/total*100m) 1m)
+let money (space : string) (tw : TextWriter) (x : decimal) = 
+    try
+        tw.Write("{0,"+space+":0,0.00}", x)
+    with
+        | _ ->
+            printfn "%M" x
+            tw.Write(x)
+
+let money10 a b = money "10" a b
+
+log ""
+
+//balance
+printfn " Bucket           | Amount              |  To Reach Target Amount "
+printfn "------------------|---------------------|-------------------------"
+Bucket.ToList ()
+|> List.iter (fun bucket ->
+    let amount = balance.TryFind bucket |> Option.defaultValue 0m
+    printfn "%-18s| %a   %5.2f%% | %a   %5.2f%%" (bucket.ToString()) money10 amount (amount/total*100m) money10 (calculateDifference total bucket amount) (bucket.TargetPercentage())
+)
 
 printfn "Total: %M" total
 
