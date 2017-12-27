@@ -1,4 +1,4 @@
-#load "./utils/Shell.fs"
+#load "./utils/Utils.fs"
 
 open System
 open System.Text.RegularExpressions
@@ -10,23 +10,6 @@ let debug = false
 let log a =
     if debug then (printfn "%A" a)
     a
-
-let tickers =
-    [
-     "Cash"
-     "BTC"
-     "BCH"
-     "VSS"
-     "VO"
-     "GOLD"
-     "SILVER"
-    ]
-
-let rawBalance =
-    { (Shell.create "hledger.exe") with
-        Arguments = sprintf "b %s -V -N --flat" (tickers |> String.concat " ") }
-    |> Shell.read
-    |> Seq.map log
 
 type Bucket =
     | MidCapBlend
@@ -71,6 +54,18 @@ let buckets =
     |> Map.add "BTC" DigitalCurrency // 2.5%
     |> Map.add "BCH" DigitalCurrency
 
+let tickers =
+    buckets
+    |> Map.toArray
+    |> Array.map fst
+    |> set
+
+let rawBalance =
+    { (Shell.create "hledger.exe") with
+        Arguments = sprintf "b %s -V -N --flat" (tickers |> String.concat " ") }
+    |> Shell.read
+    |> Seq.map log
+
 let calculateDifference total (bucket : Bucket) currentValue =
     let percentTarget = bucket.TargetRatio()
     let currentPercent = currentValue / total
@@ -97,27 +92,21 @@ let total =
     |> Map.toArray
     |> Array.sumBy snd
 
-let money (space : string) (tw : TextWriter) (x : decimal) = 
-    try
-        tw.Write("{0,"+space+":0,0.00}", x)
-    with
-        | _ ->
-            printfn "%M" x
-            tw.Write(x)
+let money (space : string option) (tw : TextWriter) (x : decimal) = 
+    tw.Write("{"+(space |> Option.map(fun x -> "0,"+x) |> Option.defaultValue "0")+":#,0.00}", x)
 
-let money10 a b = money "10" a b
-
-log ""
+let money10 a b = money (Some "10") a b
+let money0 a b  = money None a b
 
 //balance
-printfn " Bucket           | Amount              |  To Reach Target Amount "
-printfn "------------------|---------------------|-------------------------"
+printfn "\n Bucket           | Amount              |  To Reach Target Amount "
+printfn   "------------------|---------------------|-------------------------"
 Bucket.ToList ()
 |> List.iter (fun bucket ->
     let amount = balance.TryFind bucket |> Option.defaultValue 0m
     printfn "%-18s| %a   %5.2f%% | %a   %5.2f%%" (bucket.ToString()) money10 amount (amount/total*100m) money10 (calculateDifference total bucket amount) (bucket.TargetPercentage())
 )
 
-printfn "Total: %M" total
+printfn "\nTotal: $%a" money0 total
 
 //|> Seq.iter (printfn "'%A'")
