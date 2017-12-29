@@ -17,24 +17,32 @@ let ``youtube-dl`` = Path.Combine(dir, "../youtube-dl", "youtube-dl.exe")
 type YoutubeChoice =
     | LQ_MP3
     | HQ_MP3
+    | HQ_YT
     | HQ_MP3_SoundCloud
     | HQ_Facebook
+
+let choiceArray =
+    [| LQ_MP3
+       HQ_MP3
+       HQ_YT
+       HQ_MP3_SoundCloud
+       HQ_Facebook |]
 
 let youtube choice links =
     let title = """-o "%(title)s-%(id)s.%(ext)s" """
     let audio = sprintf "-f 17 %s -x --audio-format mp3 --audio-quality %i %s" title
     match choice with
-    | LQ_MP3 -> audio 9 links
-    | HQ_MP3 -> audio 1 links
-    | HQ_MP3_SoundCloud -> sprintf """ -f http_mp3_128_url -x --audio-format mp3 --audio-quality 1 %s %s""" title links
-    | HQ_Facebook -> sprintf """ -f dash_sd_src_no_ratelimit %s %s""" title links
+    | LQ_MP3 -> audio 9
+    | HQ_MP3 -> audio 1
+    | HQ_YT -> sprintf "-f 22 %s %s" title
+    | HQ_MP3_SoundCloud -> sprintf """ -f http_mp3_128_url -x --audio-format mp3 --audio-quality 1 %s %s""" title
+    | HQ_Facebook -> sprintf """ -f dash_sd_src_no_ratelimit %s %s""" title
+    <| links
 
 let choiceEnumerated =
-    Map(
-        [| ("1", LQ_MP3)
-           ("2", HQ_MP3)
-           ("3", HQ_MP3_SoundCloud)
-           ("4", HQ_Facebook) |] )
+    choiceArray
+    |> Array.mapi (fun idx x -> string (idx + 1), x)
+    |> Map
 
 let printChoices =
     choiceEnumerated
