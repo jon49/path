@@ -12,6 +12,11 @@ module CLI =
             yield! readlines f
     }
 
+    let rec GetArgs = function
+        | "--" :: rest -> List.toArray rest
+        | _ :: tail -> GetArgs tail
+        | [] -> Array.empty
+
 module Shell =
 
     open System.Diagnostics
