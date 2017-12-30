@@ -42,6 +42,16 @@ module Shell =
         Process.Start(program)
         |> ignore
 
+    let close (program : string) =
+        let p = Process.GetProcessesByName(program)
+        match p.Length with
+        | 0 -> ()
+        | _ ->
+            printfn "Closing: %s" program
+            match p.[0].CloseMainWindow() with
+            | true -> ()
+            | false -> p.[0].Kill ()
+
     let private startInfo settings =
         let startInfo = ProcessStartInfo()
         startInfo.FileName <- settings.Program
