@@ -1,21 +1,73 @@
 #load "./utils/Utils.fs"
 open Utils
 
-do
+let args = CLI.GetArgs (fsi.CommandLineArgs |> Array.toList)
 
-    [
-        "microsoft-edge:"
-        "outlook"
-        //@"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
-        @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe"
-    ]
-    |> List.iter Shell.run
+type Args =
+    | Start
+    | Stop
+    | Help
 
+let command =
+    match args.Length with
+    | 0 -> Help
+    | _ ->
+        match args.[0].ToLower() with
+        | "--start" | "-b" -> Start
+        | "--stop" | "-e" -> Stop
+        | "--help" | "-h" | _ -> Help
+
+match command with
+| Help ->
+    printfn """
+    | "--start" | "-b" -> Start
+    | "--stop" | "-e" -> Stop
+    | "--help" | "-h" | _ -> Help
+    """
+    failwith ""
+| _ -> ()
+
+type Program =
+    { App: string
+      CloseName: string
+      Start: string option
+      Stop: string option
+      WorkingDirectory: string option }
+    static member Create app closeName =
+        { App = app 
+          CloseName = closeName
+          Start = None
+          Stop = None
+          WorkingDirectory = None }
+
+let programs =
     [
-        { (Shell.create @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe") with
-            Arguments = "start"
-            WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
-        { (Shell.create @"C:\Users\jon.nyman\AppData\Local\SourceTree\SourceTree.exe") with
-            WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\SourceTree\app-2.3.5" }
+        Program.Create "microsoft-edge:" "MicrosoftEdge"
+        Program.Create "outlook" "outlook"
+        // Program.Create @"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
+        Program.Create @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
+        { (Program.Create @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
+            with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
+        { (Program.Create @"C:\Users\jon.nyman\AppData\Local\SourceTree\SourceTree.exe" "SourceTree")
+            with WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\SourceTree\app-2.3.5" }
     ]
-    |> List.iter Shell.execute
+
+match command with
+| Start ->
+    programs
+    |> List.iter (fun x ->
+        match x with
+        | {Start = None; WorkingDirectory = None} -> Shell.run x.App
+        | {Start = None; WorkingDirectory = Some _} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory }
+        | {Start = Some args} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
+    )
+| Stop ->
+    programs
+    |> List.iter (fun x ->
+        match x with
+        | {Stop = None; CloseName = name} -> Shell.close name
+        | {Stop = Some args} ->
+            printfn "Closing %s" x.CloseName
+            Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
+    )
+| Help -> ()
