@@ -1,1 +1,1 @@
-fsi "%~dp0fsx\work.fsx"
+fsi "%~dp0fsx\work.fsx" %*
