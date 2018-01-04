@@ -29,27 +29,34 @@ match command with
 type Program =
     { App: string
       CloseName: string
+      HardClose: bool
       Start: string option
       Stop: string option
       WorkingDirectory: string option }
-    static member Create app closeName =
+    static member Init hardClose app closeName =
         { App = app 
           CloseName = closeName
+          HardClose = hardClose
           Start = None
           Stop = None
           WorkingDirectory = None }
+    static member InitHard = Program.Init true
+    static member InitSoft = Program.Init false
+
+let CreateCloseHard = Program.Init true
 
 let programs =
     [
-        Program.Create "microsoft-edge:" "MicrosoftEdge"
-        Program.Create "outlook" "outlook"
-        Program.Create "Teams" "Teams"
+        Program.InitHard "microsoft-edge:" "MicrosoftEdge"
+        Program.InitHard "outlook" "outlook"
+        Program.InitHard "Teams" "Teams"
         // Program.Create @"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
-        Program.Create @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
-        { (Program.Create @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
+        Program.InitHard @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
+        { (Program.InitHard @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
             with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
-        { (Program.Create @"C:\Users\jon.nyman\AppData\Local\SourceTree\SourceTree.exe" "SourceTree")
+        { (Program.InitHard @"C:\Users\jon.nyman\AppData\Local\SourceTree\SourceTree.exe" "SourceTree")
             with WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\SourceTree\app-2.3.5" }
+        Program.InitSoft "" "devenv"
     ]
 
 match command with
@@ -57,6 +64,7 @@ match command with
     programs
     |> List.iter (fun x ->
         match x with
+        | x when x.App.Length = 0 -> ()
         | {Start = None; WorkingDirectory = None} -> Shell.run x.App
         | {Start = None; WorkingDirectory = Some _} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory }
         | {Start = Some args} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
@@ -65,7 +73,8 @@ match command with
     programs
     |> List.iter (fun x ->
         match x with
-        | {Stop = None; CloseName = name} -> Shell.close name
+        | {Stop = None; CloseName = name; HardClose = true} -> Shell.hardClose name
+        | {Stop = None; CloseName = name; HardClose = false} -> Shell.softClose name
         | {Stop = Some args} ->
             printfn "Closing %s" x.CloseName
             Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
