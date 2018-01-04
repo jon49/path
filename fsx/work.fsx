@@ -11,9 +11,9 @@ let command =
     match args.Length with
     | 2 ->
         match args.[1].ToLower() with
-        | "start" | "--start" | "b" | "-b" -> Start
-        | "stop" | "--stop" | "e" | "-e" -> Stop
-        | "--help" | "-h" | _ -> Help
+        | "start" | "--start" | "begin" | "--begin" | "b" | "-b" -> Start
+        | "stop" | "--stop" | "end" | "--end" | "e" | "-e" -> Stop
+        | "--help" | "help" | "-?" | "h" | "-h" | _ -> Help
     | _ -> Help
 
 match command with
