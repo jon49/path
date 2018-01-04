@@ -1,21 +1,20 @@
 #load "./utils/Utils.fs"
 open Utils
 
-let args = CLI.GetArgs (fsi.CommandLineArgs |> Array.toList)
-
 type Args =
     | Start
     | Stop
     | Help
 
 let command =
+    let args = fsi.CommandLineArgs
     match args.Length with
-    | 0 -> Help
-    | _ ->
-        match args.[0].ToLower() with
-        | "--start" | "-b" -> Start
-        | "--stop" | "-e" -> Stop
+    | 2 ->
+        match args.[1].ToLower() with
+        | "start" | "--start" | "b" | "-b" -> Start
+        | "stop" | "--stop" | "e" | "-e" -> Stop
         | "--help" | "-h" | _ -> Help
+    | _ -> Help
 
 match command with
 | Help ->
