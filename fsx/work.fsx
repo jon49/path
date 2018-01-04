@@ -43,6 +43,7 @@ let programs =
     [
         Program.Create "microsoft-edge:" "MicrosoftEdge"
         Program.Create "outlook" "outlook"
+        Program.Create "Teams" "Teams"
         // Program.Create @"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
         Program.Create @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
         { (Program.Create @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
