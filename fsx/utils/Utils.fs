@@ -1,5 +1,9 @@
 namespace Utils
 
+module Util =
+
+    let log x = printfn "%A" x; x
+
 module CLI =
 
     open System
