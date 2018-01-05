@@ -49,8 +49,11 @@ let programs =
     [
         Program.InitHard "microsoft-edge:" "MicrosoftEdge"
         Program.InitHard "outlook" "outlook"
-        Program.InitHard "Teams" "Teams"
+        Program.InitHard "" "chrome"
+        Program.InitSoft "" "Ssms"
         // Program.Create @"C:\Users\jon.nyman\Downloads\Offerpad\Offerpad.kdbx"
+        { (Program.InitHard @"C:\Users\jon.nyman\AppData\Local\Microsoft\Teams\Update.exe" "Teams")
+            with Start = Some """--processStart "Teams.exe" """; WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\Microsoft\Teams"  }
         Program.InitHard @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
         { (Program.InitHard @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
             with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
@@ -63,12 +66,21 @@ match command with
 | Start ->
     programs
     |> List.iter (fun x ->
-        match x with
-        | x when x.App.Length = 0 -> ()
-        | {Start = None; WorkingDirectory = None} -> Shell.run x.App
-        | {Start = None; WorkingDirectory = Some _} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory }
-        | {Start = Some args} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
+
+        match x.App.Length with
+        | 0 -> ()
+        | _ -> printfn "Opening program '%s'." x.App
+
+        try
+            match x with
+            | x when x.App.Length = 0 -> ()
+            | {Start = None; WorkingDirectory = None} -> Shell.run x.App
+            | {Start = None; WorkingDirectory = Some _} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory }
+            | {Start = Some args} -> Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
+        with
+            | ex -> printfn "The program '%s' could not be opened." x.App
     )
+
 | Stop ->
     programs
     |> List.iter (fun x ->
