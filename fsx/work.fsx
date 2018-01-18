@@ -4,17 +4,28 @@ open Utils
 type Args =
     | Start
     | Stop
+    | Personal
     | Help
 
+let args = fsi.CommandLineArgs
+
 let command =
-    let args = fsi.CommandLineArgs
     match args.Length with
-    | 2 ->
+    | x when x > 1 ->
         match args.[1].ToLower() with
         | "start" | "--start" | "begin" | "--begin" | "b" | "-b" -> Start
         | "stop" | "--stop" | "end" | "--end" | "e" | "-e" -> Stop
         | "--help" | "help" | "-?" | "h" | "-h" | _ -> Help
     | _ -> Help
+
+let personal =
+    match args.Length with
+    | x when x > 2 ->
+        match args.[2].ToLower() with
+        | "p" | "personal" | "me" -> Some Personal
+        | _ -> None
+    | _ -> None
+
 
 match command with
 | Help ->
@@ -45,7 +56,7 @@ type Program =
 
 let CreateCloseHard = Program.Init true
 
-let programs =
+let workPrograms =
     [
         Program.InitHard "microsoft-edge:" "MicrosoftEdge"
         Program.InitHard "outlook" "outlook"
@@ -61,6 +72,17 @@ let programs =
             with WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\SourceTree\app-2.3.5" }
         Program.InitSoft "" "devenv"
     ]
+
+let personalPrograms =
+    [
+        { (Program.InitSoft @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
+            with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
+    ]
+
+let programs =
+    match personal with
+    | Some Personal -> personalPrograms
+    | _ -> workPrograms
 
 match command with
 | Start ->
@@ -91,4 +113,4 @@ match command with
             printfn "Closing %s" x.CloseName
             Shell.execute { (Shell.create x.App) with WorkingDirectory = x.WorkingDirectory; Arguments = args }
     )
-| Help -> ()
+| _ -> ()
