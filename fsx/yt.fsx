@@ -63,10 +63,13 @@ Choose file type:
 %s"  printChoices
     let choice = Console.ReadLine () |> getChoice
     printfn "Enter links you would like to download:"
-    let links = Console.ReadLine () |> fun x -> x.Trim()
-    Shell.execute
-        { (Shell.create ``youtube-dl``) with
-            WorkingDirectory = Some (if choice = LQ_MP3 then media else keep)
-            Arguments = (youtube choice links)
-            UseShellExecute = true
-            WaitForExit = true }
+    Console.ReadLine ()
+    |> fun x -> x.Trim().Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
+    |> Array.iter (fun link ->
+        Shell.execute
+            { (Shell.create ``youtube-dl``) with
+                WorkingDirectory = Some (if choice = LQ_MP3 then media else keep)
+                Arguments = (youtube choice link)
+                UseShellExecute = true
+                WaitForExit = true }
+    )
