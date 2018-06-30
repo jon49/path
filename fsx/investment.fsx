@@ -5,7 +5,7 @@ open System.Text.RegularExpressions
 open Utils
 open System.IO
 
-let debug = false
+let debug = true
 
 let log a =
     if debug then (printfn "%A" a)
@@ -36,8 +36,8 @@ type Bucket =
         | InternationalSmall -> 0.15m
         | PreciousMetal -> 0.15m
         | LongTermBond -> 0.20m
-        | Cash -> 0.15m
-        | DigitalCurrency -> 0.05m
+        | Cash -> 0.175m
+        | DigitalCurrency -> 0.025m
         | Unknown -> 0m
     member this.TargetPercentage () =
         this.TargetRatio () |> (*) 100m
@@ -67,9 +67,12 @@ let rawBalance =
     |> Seq.map log
 
 let calculateDifference total (bucket : Bucket) currentValue =
-    let percentTarget = bucket.TargetRatio()
-    let currentPercent = currentValue / total
-    (percentTarget - currentPercent) * total
+    let ratioTarget = bucket.TargetRatio()
+    let currentRatio =
+        if total = 0m
+        then 0m
+        else currentValue / total
+    (ratioTarget - currentRatio) * total
 
 let bucketName (name, _) =
     match buckets.TryFind name with
@@ -104,7 +107,11 @@ printfn   "------------------|---------------------|-------------------------"
 Bucket.ToList ()
 |> List.iter (fun bucket ->
     let amount = balance.TryFind bucket |> Option.defaultValue 0m
-    printfn "%-18s| %a   %5.2f%% | %a   %5.2f%%" (bucket.ToString()) money10 amount (amount/total*100m) money10 (calculateDifference total bucket amount) (bucket.TargetPercentage())
+    let percent =
+        if total = 0m
+        then 0m
+        else (amount/total*100m)
+    printfn "%-18s| %a   %5.2f%% | %a   %5.2f%%" (bucket.ToString()) money10 amount percent money10 (calculateDifference total bucket amount) (bucket.TargetPercentage())
 )
 
 printfn "\nTotal: $%a" money0 total

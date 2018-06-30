@@ -73,6 +73,7 @@ module Shell =
     let read settings =
         let startInfo = startInfo settings
         startInfo.RedirectStandardOutput <- true
+        startInfo.UseShellExecute <- false
         let proc = Process.Start(startInfo)
         CLI.readlines (fun () -> proc.StandardOutput.ReadLine ())
 

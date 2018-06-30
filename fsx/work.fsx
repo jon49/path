@@ -4,7 +4,6 @@ open Utils
 type Args =
     | Start
     | Stop
-    | Personal
     | Help
 
 let args = fsi.CommandLineArgs
@@ -13,25 +12,16 @@ let command =
     match args.Length with
     | x when x > 1 ->
         match args.[1].ToLower() with
-        | "start" | "--start" | "begin" | "--begin" | "b" | "-b" -> Start
-        | "stop" | "--stop" | "end" | "--end" | "e" | "-e" -> Stop
+        | "start" -> Start
+        | "end" -> Stop
         | "--help" | "help" | "-?" | "h" | "-h" | _ -> Help
     | _ -> Help
-
-let personal =
-    match args.Length with
-    | x when x > 2 ->
-        match args.[2].ToLower() with
-        | "p" | "personal" | "me" -> Some Personal
-        | _ -> None
-    | _ -> None
-
 
 match command with
 | Help ->
     printfn """
-    | "--start" | "-b" -> Start
-    | "--stop" | "-e" -> Stop
+    | "start" -> Start
+    | "end" -> Stop
     | "--help" | "-h" | _ -> Help
     """
     failwith ""
@@ -68,21 +58,13 @@ let workPrograms =
         Program.InitHard @"C:\Program Files (x86)\Microsoft Office\root\Office16\lync.exe" "lync"
         { (Program.InitHard @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
             with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
-        { (Program.InitHard @"C:\Users\jon.nyman\AppData\Local\SourceTree\SourceTree.exe" "SourceTree")
-            with WorkingDirectory = Some @"C:\Users\jon.nyman\AppData\Local\SourceTree\app-2.3.5" }
+        Program.InitHard @"C:\Program Files\Azure Cosmos DB Emulator\CosmosDB.Emulator.exe" "CosmosDBEmulator"
+        Program.InitHard @"C:\Users\jon.nyman\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Atlassian\SourceTree" "SourceTree"
+        Program.InitSoft @"C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio Code\Visual Studio Code" "Code.exe"
         Program.InitSoft "" "devenv"
     ]
 
-let personalPrograms =
-    [
-        { (Program.InitSoft @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" "AzureStorageEmulator")
-            with Start = Some "start"; Stop = Some "stop"; WorkingDirectory = Some @"C:\Program Files (x86)\Microsoft SDKs\Azure\Storage Emulator\" }
-    ]
-
-let programs =
-    match personal with
-    | Some Personal -> personalPrograms
-    | _ -> workPrograms
+let programs = workPrograms
 
 match command with
 | Start ->

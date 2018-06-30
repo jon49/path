@@ -17,6 +17,7 @@ let ``youtube-dl`` = Path.Combine(dir, "../youtube-dl", "youtube-dl.exe")
 type YoutubeChoice =
     | LQ_MP3
     | HQ_MP3
+    | List_YT_Playlist
     | HQ_YT
     | HQ_MP3_SoundCloud
     | HQ_Facebook
@@ -26,7 +27,8 @@ let choiceArray =
        HQ_MP3
        HQ_YT
        HQ_MP3_SoundCloud
-       HQ_Facebook |]
+       HQ_Facebook
+       List_YT_Playlist |]
 
 let youtube choice links =
     let title = """-o "%(title)s-%(id)s.%(ext)s" """
@@ -34,6 +36,7 @@ let youtube choice links =
     match choice with
     | LQ_MP3 -> audio 9
     | HQ_MP3 -> audio 1
+    | List_YT_Playlist -> sprintf "-j --flat-playlist %s" 
     | HQ_YT -> sprintf "-f 22 %s %s" title
     | HQ_MP3_SoundCloud -> sprintf """ -f http_mp3_128_url -x --audio-format mp3 --audio-quality 1 %s %s""" title
     | HQ_Facebook -> sprintf """ -f dash_sd_src_no_ratelimit %s %s""" title
@@ -66,10 +69,25 @@ Choose file type:
     Console.ReadLine ()
     |> fun x -> x.Trim().Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
     |> Array.iter (fun link ->
-        Shell.execute
-            { (Shell.create ``youtube-dl``) with
-                WorkingDirectory = Some (if choice = LQ_MP3 then media else keep)
-                Arguments = (youtube choice link)
-                UseShellExecute = true
-                WaitForExit = true }
+        match choice with
+        | LQ_MP3 | HQ_MP3 | HQ_YT | HQ_MP3_SoundCloud | HQ_Facebook ->
+            Shell.execute
+                { (Shell.create ``youtube-dl``) with
+                    WorkingDirectory = Some (if choice = LQ_MP3 then media else keep)
+                    Arguments = youtube choice link
+                    UseShellExecute = true
+                    WaitForExit = true }
+        | List_YT_Playlist ->
+            //printfn "Enter file you would like written to:"
+            //let filePath = Console.ReadLine ()
+            //let result =
+            //    Shell.read
+            //        { (Shell.create ``youtube-dl``) with
+            //            WorkingDirectory = Some (if choice = LQ_MP3 then media else keep)
+            //            Arguments = youtube choice link
+            //            UseShellExecute = true
+            //            WaitForExit = true }
+            printfn "Use command below to write file:"
+            printfn "%s %s" ``youtube-dl`` <| youtube choice link
+            //IO.File.WriteAllText(filePath, String.concat Environment.NewLine result)
     )
