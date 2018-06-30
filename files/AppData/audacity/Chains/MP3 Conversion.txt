@@ -1,0 +1,5 @@
+StereoToMono:Use_Preset="<Factory Defaults>"
+ChangeTempo:Percentage="72.824000000000" SBSMS="0"
+Limiter:gain-L="0.000000000000" gain-R="0.000000000000" hold="10.000000000000" makeup="Yes" thresh="-3.000000000000" type="Soft Limit"
+Amplify:Ratio="0.899999976158"
+ExportMp3:
