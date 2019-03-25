@@ -48,7 +48,7 @@ let CreateCloseHard = Program.Init true
 
 let workPrograms =
     [
-        Program.InitHard "microsoft-edge:" "MicrosoftEdge"
+        Program.InitHard "vivaldi" "vivaldi"
         Program.InitHard "outlook" "outlook"
         Program.InitHard "" "chrome"
         Program.InitSoft "" "Ssms"
